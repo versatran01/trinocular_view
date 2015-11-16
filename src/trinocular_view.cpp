@@ -8,6 +8,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <boost/thread/lock_guard.hpp>
+
 namespace trinocular_view {
 
 using namespace sensor_msgs;
@@ -20,6 +22,8 @@ class TrinocularView {
 
   void ImageCb(const ImageConstPtr& left_msg, const ImageConstPtr& middle_msg,
                const ImageConstPtr& right_msg);
+
+  static void MouseCb(int event, int x, int y, int flags, void* param);
 
  private:
   ros::NodeHandle pnh_;
@@ -72,6 +76,10 @@ TrinocularView::TrinocularView() {
   cv::namedWindow("left", cv::WINDOW_AUTOSIZE);
   cv::namedWindow("middle", cv::WINDOW_AUTOSIZE);
   cv::namedWindow("right", cv::WINDOW_AUTOSIZE);
+  // TODO: disable for now
+  //  cv::setMouseCallback("left", &TrinocularView::MouseCb, this);
+  //  cv::setMouseCallback("middle", &TrinocularView::MouseCb, this);
+  //  cv::setMouseCallback("right", &TrinocularView::MouseCb, this);
 }
 
 TrinocularView::~TrinocularView() { cv::destroyAllWindows(); }
@@ -106,6 +114,16 @@ void TrinocularView::ImageCb(const ImageConstPtr& left_msg,
   if (!last_right_image_.empty()) {
     cv::imshow("right", last_right_image_);
   }
+}
+
+void TrinocularView::MouseCb(int event, int x, int y, int flags, void* param) {
+  // Right click saves images
+  if (event != cv::EVENT_RBUTTONDOWN) {
+    return;
+  }
+
+  TrinocularView* tv = static_cast<TrinocularView*>(param);
+  boost::lock_guard<boost::mutex> guard(tv->image_mutex_);
 }
 
 }  // namespace trinocular_view

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>snapshot</name>
+    <name>trinocular_view</name>
     <version>0.0.1</version>
-    <description>Package for visualizing and saving images</description>
+    <description>Package for visualizing and saving trinocular images</description>
 
     <maintainer email="quchao@seas.upenn.edu">chao</maintainer>
     <license>Proprietary</license>
