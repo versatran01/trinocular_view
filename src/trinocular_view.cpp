@@ -8,7 +8,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <boost/thread/lock_guard.hpp>
+#include <boost/thread.hpp>
+#include <boost/format.hpp>
 
 namespace trinocular_view {
 
@@ -25,13 +26,16 @@ class TrinocularView {
 
   static void MouseCb(int event, int x, int y, int flags, void* param);
 
+  void SaveImage(const std::string& prefix, const cv::Mat& image);
+
  private:
   ros::NodeHandle pnh_;
   image_transport::SubscriberFilter left_sub_, middle_sub_, right_sub_;
   using ExactPolicy = ExactTime<Image, Image, Image>;
   using ExactSync = message_filters::Synchronizer<ExactPolicy>;
   boost::shared_ptr<ExactSync> exact_sync_;
-  int queue_size_{1};
+  int queue_size_{5};
+  int save_count_{0};
 
   ImageConstPtr last_left_msg_, last_middle_msg_, last_right_msg_;
   cv::Mat last_left_image_, last_middle_image_, last_right_image_;
@@ -69,10 +73,9 @@ TrinocularView::TrinocularView() {
   cv::namedWindow("left", cv::WINDOW_AUTOSIZE);
   cv::namedWindow("middle", cv::WINDOW_AUTOSIZE);
   cv::namedWindow("right", cv::WINDOW_AUTOSIZE);
-  // TODO: disable for now
-  //  cv::setMouseCallback("left", &TrinocularView::MouseCb, this);
-  //  cv::setMouseCallback("middle", &TrinocularView::MouseCb, this);
-  //  cv::setMouseCallback("right", &TrinocularView::MouseCb, this);
+  cv::setMouseCallback("left", &TrinocularView::MouseCb, this);
+  cv::setMouseCallback("middle", &TrinocularView::MouseCb, this);
+  cv::setMouseCallback("right", &TrinocularView::MouseCb, this);
 }
 
 TrinocularView::~TrinocularView() { cv::destroyAllWindows(); }
@@ -80,8 +83,6 @@ TrinocularView::~TrinocularView() { cv::destroyAllWindows(); }
 void TrinocularView::ImageCb(const ImageConstPtr& left_msg,
                              const ImageConstPtr& middle_msg,
                              const ImageConstPtr& right_msg) {
-  ROS_INFO("Inside callback");
-
   // Hang on to image data for mouse callback
   last_left_msg_ = left_msg;
   last_middle_msg_ = middle_msg;
@@ -120,6 +121,14 @@ void TrinocularView::MouseCb(int event, int x, int y, int flags, void* param) {
 
   TrinocularView* tv = static_cast<TrinocularView*>(param);
   boost::lock_guard<boost::mutex> guard(tv->image_mutex_);
+}
+
+void TrinocularView::SaveImage(const std::string& prefix,
+                               const cv::Mat& image) {
+  if (image.empty()) {
+    ROS_WARN("Couldn't save %s image, no data!", prefix.c_str());
+    return;
+  }
 }
 
 }  // namespace trinocular_view
