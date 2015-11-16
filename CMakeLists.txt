@@ -3,9 +3,12 @@ project(snapshot)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
+  image_transport
+  message_filters
   )
 
 catkin_package()
