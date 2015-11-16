@@ -42,17 +42,10 @@ TrinocularView::TrinocularView() {
   ros::NodeHandle pnh("~");
 
   // Resolve topic names
-  const auto trinocular_ns = pnh.resolveName("trinocular");
-  const auto image_resolved = pnh.resolveName("image");
-  const auto left_topic =
-      ros::names::clean(trinocular_ns + "/left/" + image_resolved);
-  const auto middle_topic =
-      ros::names::clean(trinocular_ns + "/middle/" + image_resolved);
-  const auto right_topic =
-      ros::names::clean(trinocular_ns + "/right/" + image_resolved);
+  const std::string left_topic = "left/image_raw";
+  const std::string middle_topic = "left/image_raw";
+  const std::string right_topic = "left/image_raw";
 
-  ROS_INFO("tirnocular ns: %s", trinocular_ns.c_str());
-  ROS_INFO("image resolved: %s", image_resolved.c_str());
   ROS_INFO("left topic: %s", left_topic.c_str());
   ROS_INFO("middle topic: %s", middle_topic.c_str());
   ROS_INFO("right topic: %s", right_topic.c_str());
@@ -87,6 +80,8 @@ TrinocularView::~TrinocularView() { cv::destroyAllWindows(); }
 void TrinocularView::ImageCb(const ImageConstPtr& left_msg,
                              const ImageConstPtr& middle_msg,
                              const ImageConstPtr& right_msg) {
+  ROS_INFO("Inside callback");
+
   // Hang on to image data for mouse callback
   last_left_msg_ = left_msg;
   last_middle_msg_ = middle_msg;
@@ -114,6 +109,7 @@ void TrinocularView::ImageCb(const ImageConstPtr& left_msg,
   if (!last_right_image_.empty()) {
     cv::imshow("right", last_right_image_);
   }
+  cv::waitKey(1);
 }
 
 void TrinocularView::MouseCb(int event, int x, int y, int flags, void* param) {

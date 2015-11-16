@@ -2,7 +2,7 @@
   <arg name="trinocular" default="multi"/>
   <arg name="image" default="image_raw"/>
   <node pkg="trinocular_view" type="trinocular_view" name="trinocular_view"
-    output="screen" ns="$(arg tirnocular)">
+    output="screen">
     <remap from="~left/$(arg image)" to="/$(arg trinocular)/camera0/$(arg image)"/>
     <remap from="~middle/$(arg image)" to="/$(arg trinocular)/camera1/$(arg image)"/>
     <remap from="~right/$(arg image)" to="/$(arg trinocular)/camera2/$(arg image)"/>
