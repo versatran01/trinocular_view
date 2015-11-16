@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   image_transport
   message_filters
+  cv_bridge
   )
 
 catkin_package()
@@ -17,11 +18,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   )
 
-add_executable(${PROJECT_NAME}_node
-  src/snapshot_node.cpp
+add_executable(${PROJECT_NAME}
+  src/trinocular_view.cpp
   )
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   )
 
-add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
