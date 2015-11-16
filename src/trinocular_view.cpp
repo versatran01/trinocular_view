@@ -26,7 +26,7 @@ class TrinocularView {
 
   static void MouseCb(int event, int x, int y, int flags, void* param);
 
-  void SaveImage(const std::string& prefix, const cv::Mat& image);
+  void SaveImage(const char* prefix, const cv::Mat& image);
 
  private:
   ros::NodeHandle pnh_;
@@ -35,11 +35,13 @@ class TrinocularView {
   using ExactSync = message_filters::Synchronizer<ExactPolicy>;
   boost::shared_ptr<ExactSync> exact_sync_;
   int queue_size_{5};
-  int save_count_{0};
 
   ImageConstPtr last_left_msg_, last_middle_msg_, last_right_msg_;
   cv::Mat last_left_image_, last_middle_image_, last_right_image_;
   boost::mutex image_mutex_;
+
+  boost::format filename_format_;
+  int save_count_{0};
 };
 
 TrinocularView::TrinocularView() {
@@ -47,8 +49,8 @@ TrinocularView::TrinocularView() {
 
   // Resolve topic names
   const std::string left_topic = "left/image_raw";
-  const std::string middle_topic = "left/image_raw";
-  const std::string right_topic = "left/image_raw";
+  const std::string middle_topic = "middle/image_raw";
+  const std::string right_topic = "right/image_raw";
 
   ROS_INFO("left topic: %s", left_topic.c_str());
   ROS_INFO("middle topic: %s", middle_topic.c_str());
@@ -76,6 +78,11 @@ TrinocularView::TrinocularView() {
   cv::setMouseCallback("left", &TrinocularView::MouseCb, this);
   cv::setMouseCallback("middle", &TrinocularView::MouseCb, this);
   cv::setMouseCallback("right", &TrinocularView::MouseCb, this);
+
+  // Filename format
+  std::string format_string;
+  pnh.param<std::string>("filename_format", format_string, "%s%04i.png");
+  filename_format_.parse(format_string);
 }
 
 TrinocularView::~TrinocularView() { cv::destroyAllWindows(); }
@@ -121,14 +128,22 @@ void TrinocularView::MouseCb(int event, int x, int y, int flags, void* param) {
 
   TrinocularView* tv = static_cast<TrinocularView*>(param);
   boost::lock_guard<boost::mutex> guard(tv->image_mutex_);
+
+  tv->SaveImage("left", tv->last_left_image_);
+  tv->SaveImage("middle", tv->last_middle_image_);
+  tv->SaveImage("right", tv->last_right_image_);
+  tv->save_count_++;
 }
 
-void TrinocularView::SaveImage(const std::string& prefix,
-                               const cv::Mat& image) {
+void TrinocularView::SaveImage(const char* prefix, const cv::Mat& image) {
   if (image.empty()) {
-    ROS_WARN("Couldn't save %s image, no data!", prefix.c_str());
+    ROS_WARN("Couldn't save %s image, no data!", prefix);
     return;
   }
+
+  std::string filename = (filename_format_ % prefix % save_count_).str();
+  cv::imwrite(filename, image);
+  ROS_INFO("Saved image %s", filename.c_str());
 }
 
 }  // namespace trinocular_view
